@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedCare HMS</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --sidebar: #1a2340;
+    --accent: #3b5bdb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-soft: #64748b;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+
+  /* Sidebar */
+  .sidebar { width: 240px; background: var(--sidebar); min-height: 100vh; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .logo-text { color: #fff; font-size: 17px; font-weight: 700; }
+  .logo-sub { color: #a0aec0; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .sidebar-nav { padding: 16px 12px; flex: 1; }
+  .nav-label { color: #a0aec0; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 10px 6px; font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #a0aec0; cursor: pointer; margin-bottom: 2px; font-size: 13.5px; transition: all 0.15s; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .user-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.06); }
+  .user-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .user-name { color: #fff; font-size: 13px; font-weight: 600; }
+  .user-role { color: #a0aec0; font-size: 11px; }
+
+  /* Main */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 17px; font-weight: 700; }
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+  .search-box { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; width: 240px; }
+  .search-box input { border: none; background: transparent; font-size: 13px; color: var(--text); outline: none; width: 100%; }
+  .search-box input::placeholder { color: var(--text-soft); }
+  .notif-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; position: relative; }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; background: var(--danger); border-radius: 50%; border: 1.5px solid #fff; }
+  .content { padding: 28px; }
+
+  /* Pages */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Section header */
+  .sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .sec-header h2 { font-size: 20px; font-weight: 800; }
+  .sec-header p { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); }
+  .stat-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .stat-label { font-size: 12px; color: var(--text-soft); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .stat-num { font-size: 28px; font-weight: 800; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+  .up { color: var(--success); font-weight: 600; }
+
+  /* Card */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+  .card-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-sub { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .card-body { padding: 16px 20px; }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-soft); padding: 10px 12px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+  .tbl td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: #f8fafc; }
+
+  /* Badge */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .bg { background: #dbeafe; color: #1d4ed8; }
+  .gg { background: #d1fae5; color: #065f46; }
+  .yy { background: #fef3c7; color: #92400e; }
+  .rr { background: #fee2e2; color: #991b1b; }
+  .pp { background: #ede9fe; color: #5b21b6; }
+
+  /* Button */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; font-family: inherit; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2f4ac0; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Avatar */
+  .av { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .pcell { display: flex; align-items: center; gap: 10px; }
+  .pname { font-weight: 600; font-size: 13.5px; }
+  .pid { font-size: 11px; color: var(--text-soft); }
+
+  /* Appointment */
+  .appt { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .appt:last-child { border-bottom: none; }
+  .appt-time { width: 52px; font-family: monospace; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; text-align: center; }
+  .appt-info { flex: 1; }
+  .appt-name { font-size: 13px; font-weight: 600; }
+  .appt-type { font-size: 11px; color: var(--text-soft); }
+
+  /* Doctor card */
+  .doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .doc-card:last-child { border-bottom: none; }
+  .doc-name { font-size: 14px; font-weight: 700; }
+  .doc-spec { font-size: 12px; color: var(--text-soft); }
+  .doc-pts { font-size: 12px; color: var(--accent); margin-top: 2px; }
+
+  /* Bill */
+  .bill-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .bill-total { display: flex; justify-content: space-between; padding: 14px 0 0; font-size: 16px; font-weight: 800; }
+
+  /* Modal */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--card); border-radius: 16px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: mIn 0.2s ease; }
+  @keyframes mIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: none; } }
+  .modal-head { padding: 22px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close { border: none; background: none; font-size: 22px; color: var(--text-soft); cursor: pointer; line-height: 1; }
+  .modal-body { padding: 20px 24px; }
+  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* Form */
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .fg { display: flex; flex-direction: column; gap: 6px; }
+  .fg.full { grid-column: 1/-1; }
+  .flabel { font-size: 12px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+  .finput { border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; font-family: inherit; color: var(--text); background: var(--card); outline: none; transition: border-color 0.15s; }
+  .finput:focus { border-color: var(--accent); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; right: 28px; background: #1e293b; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 500; z-index: 2000; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+  .toast.show { display: block; animation: tIn 0.25s ease; }
+  @keyframes tIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: none; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon" style="font-size:13px;font-weight:900;color:#fff">MC</div>
+    <div><div class="logo-text">MedCare</div><div class="logo-sub">Hospital Management</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="go('dashboard',this)"><span class="nav-icon">&#9632;</span> Dashboard</div>
+    <div class="nav-item" onclick="go('patients',this)"><span class="nav-icon">&#43;</span> Patients</div>
+    <div class="nav-item" onclick="go('doctors',this)"><span class="nav-icon">&#43;</span> Doctors</div>
+    <div class="nav-item" onclick="go('appointments',this)"><span class="nav-icon">&#9632;</span> Appointments</div>
+    <div class="nav-label" style="margin-top:12px">Operations</div>
+    <div class="nav-item" onclick="go('records',this)"><span class="nav-icon">&#9632;</span> Medical Records</div>
+    <div class="nav-item" onclick="go('billing',this)"><span class="nav-icon">&#9632;</span> Billing</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">AD</div>
+      <div><div class="user-name">Admin</div><div class="user-role">Hospital Staff</div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="ttitle">Dashboard</div>
+    <div class="topbar-actions">
+      <div class="search-box"><input type="text" placeholder="Search patients, doctors..." /></div>
+      <div class="notif-btn">&#9825;<span class="notif-dot"></span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="pg-dashboard">
+      <div class="sec-header">
+        <div><h2>Good morning, Admin</h2><p>Here's what's happening at MedCare today.</p></div>
+        <button class="btn btn-primary" onclick="open_('reg')">+ Register Patient</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-top"><div class="stat-label">Total Patients</div><div class="stat-icon" style="background:#dbeafe;color:#1d4ed8;font-weight:800;font-size:13px">P</div></div><div class="stat-num">1,284</div><div class="stat-sub"><span class="up">+12%</span> this month</div></div>
+        <div class="stat-card"><div class="stat-top"><div class="stat-label">Appointments</div><div class="stat-icon" style="background:#d1fae5;color:#065f46;font-weight:800;font-size:13px">A</div></div><div class="stat-num">48</div><div class="stat-sub"><span class="up">+4</span> today</div></div>
+        <div class="stat-card"><div class="stat-top"><div class="stat-label">Doctors</div><div class="stat-icon" style="background:#ede9fe;color:#5b21b6;font-weight:800;font-size:13px">D</div></div><div class="stat-num">32</div><div class="stat-sub">8 departments</div></div>
+        <div class="stat-card"><div class="stat-top"><div class="stat-label">Revenue</div><div class="stat-icon" style="background:#fef3c7;color:#92400e;font-weight:800;font-size:13px">৳</div></div><div class="stat-num">৳84k</div><div class="stat-sub"><span class="up">+8%</span> this week</div></div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Recent Patients</div><div class="card-sub">Last 5 registered</div></div><button class="btn btn-outline btn-sm" onclick="go('patients',null)">View all</button></div>
+          <div class="card-body" style="padding:0">
+            <table class="tbl">
+              <thead><tr><th>Patient</th><th>Age</th><th>Condition</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><div class="pcell"><div class="av" style="background:#3b5bdb">RA</div><div><div class="pname">Rafi Ahmed</div><div class="pid">#P-0012</div></div></div></td><td>34</td><td>Fever</td><td><span class="badge yy">Ongoing</span></td></tr>
+                <tr><td><div class="pcell"><div class="av" style="background:#10b981">NI</div><div><div class="pname">Nadia Islam</div><div class="pid">#P-0013</div></div></div></td><td>27</td><td>Checkup</td><td><span class="badge gg">Discharged</span></td></tr>
+                <tr><td><div class="pcell"><div class="av" style="background:#f59e0b">KH</div><div><div class="pname">Karim Hossain</div><div class="pid">#P-0014</div></div></div></td><td>52</td><td>Diabetes</td><td><span class="badge bg">Admitted</span></td></tr>
+                <tr><td><div class="pcell"><div class="av" style="background:#ef4444">SR</div><div><div class="pname">Sumaiya Rahman</div><div class="pid">#P-0015</div></div></div></td><td>41</td><td>Fracture</td><td><span class="badge yy">Ongoing</span></td></tr>
+                <tr><td><div class="pcell"><div class="av" style="background:#7c3aed">MT</div><div><div class="pname">Masum Talukder</div><div class="pid">#P-0016</div></div></div></td><td>19</td><td>Eye exam</td><td><span class="badge gg">Discharged</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Today's Appointments</div><div class="card-sub">June 29, 2026</div></div></div>
+          <div class="card-body">
+            <div class="appt"><div class="appt-time">09:00</div><div class="av" style="background:#3b5bdb;width:32px;height:32px;font-size:11px">RA</div><div class="appt-info"><div class="appt-name">Rafi Ahmed</div><div class="appt-type">Dr. Hasan · General</div></div><span class="badge bg">Now</span></div>
+            <div class="appt"><div class="appt-time">10:30</div><div class="av" style="background:#10b981;width:32px;height:32px;font-size:11px">NI</div><div class="appt-info"><div class="appt-name">Nadia Islam</div><div class="appt-type">Dr. Parvin · OB-GYN</div></div><span class="badge yy">Soon</span></div>
+            <div class="appt"><div class="appt-time">11:00</div><div class="av" style="background:#f59e0b;width:32px;height:32px;font-size:11px">KH</div><div class="appt-info"><div class="appt-name">Karim Hossain</div><div class="appt-type">Dr. Rahman · Cardiology</div></div><span class="badge yy">Soon</span></div>
+            <div class="appt"><div class="appt-time">14:00</div><div class="av" style="background:#ef4444;width:32px;height:32px;font-size:11px">SR</div><div class="appt-info"><div class="appt-name">Sumaiya Rahman</div><div class="appt-type">Dr. Ali · Orthopedics</div></div><span class="badge pp">Scheduled</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patients -->
+    <div class="page" id="pg-patients">
+      <div class="sec-header"><div><h2>Patients</h2><p>Manage all registered patients</p></div><button class="btn btn-primary" onclick="open_('reg')">+ Register Patient</button></div>
+      <div class="card"><div class="card-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>Patient</th><th>Age</th><th>Gender</th><th>Contact</th><th>Condition</th><th>Doctor</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="pcell"><div class="av" style="background:#3b5bdb">RA</div><div><div class="pname">Rafi Ahmed</div><div class="pid">#P-0012</div></div></div></td><td>34</td><td>Male</td><td>017XXXXXXXX</td><td>Fever</td><td>Dr. Hasan</td><td><span class="badge yy">Ongoing</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#10b981">NI</div><div><div class="pname">Nadia Islam</div><div class="pid">#P-0013</div></div></div></td><td>27</td><td>Female</td><td>018XXXXXXXX</td><td>Checkup</td><td>Dr. Parvin</td><td><span class="badge gg">Discharged</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#f59e0b">KH</div><div><div class="pname">Karim Hossain</div><div class="pid">#P-0014</div></div></div></td><td>52</td><td>Male</td><td>019XXXXXXXX</td><td>Diabetes</td><td>Dr. Rahman</td><td><span class="badge bg">Admitted</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#ef4444">SR</div><div><div class="pname">Sumaiya Rahman</div><div class="pid">#P-0015</div></div></div></td><td>41</td><td>Female</td><td>016XXXXXXXX</td><td>Fracture</td><td>Dr. Ali</td><td><span class="badge yy">Ongoing</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Doctors -->
+    <div class="page" id="pg-doctors">
+      <div class="sec-header"><div><h2>Doctors</h2><p>All medical staff and specialists</p></div><button class="btn btn-primary" onclick="open_('doc')">+ Add Doctor</button></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-header"><div class="card-title">Active Doctors</div></div><div class="card-body">
+          <div class="doc-card"><div class="av" style="background:#3b5bdb;width:44px;height:44px;font-size:14px">MH</div><div style="flex:1"><div class="doc-name">Dr. Md. Hasan</div><div class="doc-spec">General Medicine</div><div class="doc-pts">18 active patients</div></div><span class="badge gg">Available</span></div>
+          <div class="doc-card"><div class="av" style="background:#7c3aed;width:44px;height:44px;font-size:14px">RP</div><div style="flex:1"><div class="doc-name">Dr. Rina Parvin</div><div class="doc-spec">OB-GYN</div><div class="doc-pts">12 active patients</div></div><span class="badge yy">Busy</span></div>
+          <div class="doc-card"><div class="av" style="background:#10b981;width:44px;height:44px;font-size:14px">AR</div><div style="flex:1"><div class="doc-name">Dr. Ahsan Rahman</div><div class="doc-spec">Cardiology</div><div class="doc-pts">9 active patients</div></div><span class="badge gg">Available</span></div>
+          <div class="doc-card"><div class="av" style="background:#f59e0b;width:44px;height:44px;font-size:14px">FA</div><div style="flex:1"><div class="doc-name">Dr. Farhan Ali</div><div class="doc-spec">Orthopedics</div><div class="doc-pts">7 active patients</div></div><span class="badge rr">Off duty</span></div>
+        </div></div>
+        <div class="card"><div class="card-header"><div class="card-title">Departments</div></div><div class="card-body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Department</th><th>Doctors</th><th>Patients</th></tr></thead>
+            <tbody>
+              <tr><td>General Medicine</td><td>8</td><td>120</td></tr>
+              <tr><td>Cardiology</td><td>5</td><td>64</td></tr>
+              <tr><td>Orthopedics</td><td>4</td><td>48</td></tr>
+              <tr><td>OB-GYN</td><td>6</td><td>90</td></tr>
+              <tr><td>Pediatrics</td><td>5</td><td>75</td></tr>
+              <tr><td>Neurology</td><td>4</td><td>40</td></tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Appointments -->
+    <div class="page" id="pg-appointments">
+      <div class="sec-header"><div><h2>Appointments</h2><p>Schedule and manage appointments</p></div><button class="btn btn-primary" onclick="open_('appt')">+ Book Appointment</button></div>
+      <div class="card"><div class="card-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>Patient</th><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="pcell"><div class="av" style="background:#3b5bdb">RA</div><div class="pname">Rafi Ahmed</div></div></td><td>Dr. Hasan</td><td>General</td><td>Jun 29</td><td>09:00 AM</td><td><span class="badge bg">Confirmed</span></td><td><button class="btn btn-outline btn-sm">Cancel</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#10b981">NI</div><div class="pname">Nadia Islam</div></div></td><td>Dr. Parvin</td><td>OB-GYN</td><td>Jun 29</td><td>10:30 AM</td><td><span class="badge bg">Confirmed</span></td><td><button class="btn btn-outline btn-sm">Cancel</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#f59e0b">KH</div><div class="pname">Karim Hossain</div></div></td><td>Dr. Rahman</td><td>Cardiology</td><td>Jun 30</td><td>11:00 AM</td><td><span class="badge yy">Pending</span></td><td><button class="btn btn-outline btn-sm">Cancel</button></td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Records -->
+    <div class="page" id="pg-records">
+      <div class="sec-header"><div><h2>Medical Records</h2><p>Patient history and diagnoses</p></div><button class="btn btn-primary" onclick="open_('addr')">+ Add Record</button></div>
+      <div class="card"><div class="card-body" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>Patient</th><th>Doctor</th><th>Diagnosis</th><th>Date</th><th>Prescription</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><div class="pcell"><div class="av" style="background:#3b5bdb">RA</div><div><div class="pname">Rafi Ahmed</div><div class="pid">#P-0012</div></div></div></td><td>Dr. Hasan</td><td>Viral Fever</td><td>Jun 28</td><td>Paracetamol, Rest</td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#f59e0b">KH</div><div><div class="pname">Karim Hossain</div><div class="pid">#P-0014</div></div></div></td><td>Dr. Rahman</td><td>Type 2 Diabetes</td><td>Jun 25</td><td>Metformin 500mg</td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+            <tr><td><div class="pcell"><div class="av" style="background:#ef4444">SR</div><div><div class="pname">Sumaiya Rahman</div><div class="pid">#P-0015</div></div></div></td><td>Dr. Ali</td><td>Hairline Fracture</td><td>Jun 27</td><td>Cast, Pain relief</td><td><button class="btn btn-outline btn-sm" onclick="open_('rec')">View</button></td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- Billing -->
+    <div class="page" id="pg-billing">
+      <div class="sec-header"><div><h2>Billing</h2><p>Generate and manage patient bills</p></div><button class="btn btn-primary" onclick="open_('bill')">+ Generate Bill</button></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-body" style="padding:0">
+          <table class="tbl">
+            <thead><tr><th>Bill ID</th><th>Patient</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:monospace">#B-0041</td><td>Rafi Ahmed</td><td>৳2,400</td><td><span class="badge gg">Paid</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('bill')">View</button></td></tr>
+              <tr><td style="font-family:monospace">#B-0042</td><td>Karim Hossain</td><td>৳8,750</td><td><span class="badge yy">Pending</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('bill')">View</button></td></tr>
+              <tr><td style="font-family:monospace">#B-0043</td><td>Sumaiya Rahman</td><td>৳5,200</td><td><span class="badge rr">Unpaid</span></td><td><button class="btn btn-outline btn-sm" onclick="open_('bill')">View</button></td></tr>
+            </tbody>
+          </table>
+        </div></div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Bill Preview — #B-0042</div></div>
+          <div class="card-body">
+            <div style="font-size:12px;color:var(--text-soft);margin-bottom:12px">Karim Hossain · Admitted Jun 25</div>
+            <div class="bill-row"><span>Consultation fee</span><span>৳800</span></div>
+            <div class="bill-row"><span>Room charge (3 days)</span><span>৳4,500</span></div>
+            <div class="bill-row"><span>Lab tests</span><span>৳1,800</span></div>
+            <div class="bill-row"><span>Medication</span><span>৳950</span></div>
+            <div class="bill-row"><span>Nursing care</span><span>৳700</span></div>
+            <div class="bill-total"><span>Total</span><span style="color:var(--accent)">৳8,750</span></div>
+            <button class="btn btn-primary" style="width:100%;margin-top:16px;justify-content:center" onclick="toast('Bill sent to patient')">Send Bill</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modals -->
+<!-- Register Patient -->
+<div class="overlay" id="m-reg"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Register New Patient</div><button class="modal-close" onclick="close_('reg')">&times;</button></div>
+  <div class="modal-body"><div class="fgrid">
+    <div class="fg"><label class="flabel">First Name</label><input class="finput" type="text" placeholder="Rafi" /></div>
+    <div class="fg"><label class="flabel">Last Name</label><input class="finput" type="text" placeholder="Ahmed" /></div>
+    <div class="fg"><label class="flabel">Age</label><input class="finput" type="number" placeholder="34" /></div>
+    <div class="fg"><label class="flabel">Gender</label><select class="finput"><option>Male</option><option>Female</option><option>Other</option></select></div>
+    <div class="fg"><label class="flabel">Phone</label><input class="finput" type="tel" placeholder="017XXXXXXXX" /></div>
+    <div class="fg"><label class="flabel">Blood Group</label><select class="finput"><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>O+</option><option>O-</option><option>AB+</option><option>AB-</option></select></div>
+    <div class="fg full"><label class="flabel">Address</label><input class="finput" type="text" placeholder="Dhaka, Bangladesh" /></div>
+    <div class="fg"><label class="flabel">Condition</label><input class="finput" type="text" placeholder="Fever, Diabetes..." /></div>
+    <div class="fg"><label class="flabel">Assign Doctor</label><select class="finput"><option>Dr. Hasan</option><option>Dr. Parvin</option><option>Dr. Rahman</option><option>Dr. Ali</option></select></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('reg')">Cancel</button><button class="btn btn-primary" onclick="close_('reg');toast('Patient registered successfully')">Register Patient</button></div>
+</div></div>
+
+<!-- Book Appointment -->
+<div class="overlay" id="m-appt"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Book Appointment</div><button class="modal-close" onclick="close_('appt')">&times;</button></div>
+  <div class="modal-body"><div class="fgrid">
+    <div class="fg full"><label class="flabel">Patient</label><select class="finput"><option>Rafi Ahmed (#P-0012)</option><option>Nadia Islam (#P-0013)</option><option>Karim Hossain (#P-0014)</option></select></div>
+    <div class="fg"><label class="flabel">Doctor</label><select class="finput"><option>Dr. Hasan</option><option>Dr. Parvin</option><option>Dr. Rahman</option></select></div>
+    <div class="fg"><label class="flabel">Department</label><select class="finput"><option>General Medicine</option><option>Cardiology</option><option>OB-GYN</option></select></div>
+    <div class="fg"><label class="flabel">Date</label><input class="finput" type="date" /></div>
+    <div class="fg"><label class="flabel">Time</label><input class="finput" type="time" /></div>
+    <div class="fg full"><label class="flabel">Notes</label><input class="finput" type="text" placeholder="Reason for visit..." /></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('appt')">Cancel</button><button class="btn btn-primary" onclick="close_('appt');toast('Appointment booked')">Book Appointment</button></div>
+</div></div>
+
+<!-- Add Record -->
+<div class="overlay" id="m-addr"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Add Medical Record</div><button class="modal-close" onclick="close_('addr')">&times;</button></div>
+  <div class="modal-body"><div class="fgrid">
+    <div class="fg full"><label class="flabel">Patient</label><select class="finput"><option>Rafi Ahmed (#P-0012)</option><option>Karim Hossain (#P-0014)</option></select></div>
+    <div class="fg"><label class="flabel">Doctor</label><select class="finput"><option>Dr. Hasan</option><option>Dr. Rahman</option></select></div>
+    <div class="fg"><label class="flabel">Date</label><input class="finput" type="date" /></div>
+    <div class="fg full"><label class="flabel">Diagnosis</label><input class="finput" type="text" placeholder="Viral Fever, Type 2 Diabetes..." /></div>
+    <div class="fg full"><label class="flabel">Prescription</label><input class="finput" type="text" placeholder="Paracetamol 500mg, Rest..." /></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('addr')">Cancel</button><button class="btn btn-primary" onclick="close_('addr');toast('Record saved')">Save Record</button></div>
+</div></div>
+
+<!-- View Record -->
+<div class="overlay" id="m-rec"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Patient Record — Rafi Ahmed</div><button class="modal-close" onclick="close_('rec')">&times;</button></div>
+  <div class="modal-body">
+    <div style="display:flex;gap:16px;align-items:center;margin-bottom:20px">
+      <div class="av" style="background:#3b5bdb;width:52px;height:52px;font-size:16px">RA</div>
+      <div><div style="font-size:16px;font-weight:700">Rafi Ahmed</div><div style="color:var(--text-soft);font-size:13px">#P-0012 · Male · 34 yrs · A+</div><div style="font-size:13px">017XXXXXXXX</div></div>
+    </div>
+    <div style="background:var(--bg);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Latest Diagnosis</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">Viral Fever</div>
+      <div style="font-size:13px;color:var(--text-soft)">Prescription: Paracetamol 500mg, adequate rest and hydration</div>
+      <div style="font-size:12px;color:var(--text-soft);margin-top:8px">Dr. Hasan · Jun 28, 2026</div>
+    </div>
+    <table class="tbl"><thead><tr><th>Date</th><th>Doctor</th><th>Diagnosis</th></tr></thead><tbody>
+      <tr><td>Jun 28</td><td>Dr. Hasan</td><td>Viral Fever</td></tr>
+      <tr><td>Mar 12</td><td>Dr. Rahman</td><td>Routine Checkup</td></tr>
+      <tr><td>Jan 5</td><td>Dr. Ali</td><td>Minor Sprain</td></tr>
+    </tbody></table>
+  </div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('rec')">Close</button><button class="btn btn-primary" onclick="close_('rec');open_('bill')">Generate Bill</button></div>
+</div></div>
+
+<!-- Add Doctor -->
+<div class="overlay" id="m-doc"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Add New Doctor</div><button class="modal-close" onclick="close_('doc')">&times;</button></div>
+  <div class="modal-body"><div class="fgrid">
+    <div class="fg"><label class="flabel">First Name</label><input class="finput" type="text" placeholder="Md." /></div>
+    <div class="fg"><label class="flabel">Last Name</label><input class="finput" type="text" placeholder="Hasan" /></div>
+    <div class="fg"><label class="flabel">Specialization</label><select class="finput"><option>General Medicine</option><option>Cardiology</option><option>OB-GYN</option><option>Orthopedics</option></select></div>
+    <div class="fg"><label class="flabel">Phone</label><input class="finput" type="tel" placeholder="017XXXXXXXX" /></div>
+    <div class="fg full"><label class="flabel">Email</label><input class="finput" type="email" placeholder="doctor@medcare.com" /></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('doc')">Cancel</button><button class="btn btn-primary" onclick="close_('doc');toast('Doctor added successfully')">Add Doctor</button></div>
+</div></div>
+
+<!-- Generate Bill -->
+<div class="overlay" id="m-bill"><div class="modal">
+  <div class="modal-head"><div class="modal-title">Generate Bill</div><button class="modal-close" onclick="close_('bill')">&times;</button></div>
+  <div class="modal-body"><div class="fgrid">
+    <div class="fg full"><label class="flabel">Patient</label><select class="finput"><option>Karim Hossain (#P-0014)</option><option>Rafi Ahmed (#P-0012)</option></select></div>
+    <div class="fg"><label class="flabel">Consultation Fee (৳)</label><input class="finput" type="number" placeholder="800" /></div>
+    <div class="fg"><label class="flabel">Room Charge (৳)</label><input class="finput" type="number" placeholder="4500" /></div>
+    <div class="fg"><label class="flabel">Lab Tests (৳)</label><input class="finput" type="number" placeholder="1800" /></div>
+    <div class="fg"><label class="flabel">Medication (৳)</label><input class="finput" type="number" placeholder="950" /></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn btn-outline" onclick="close_('bill')">Cancel</button><button class="btn btn-primary" onclick="close_('bill');toast('Bill generated successfully')">Generate Bill</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const labels = { dashboard:'Dashboard', patients:'Patients', doctors:'Doctors', appointments:'Appointments', records:'Medical Records', billing:'Billing' };
+
+  function go(page, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('pg-' + page).classList.add('active');
+    document.getElementById('ttitle').textContent = labels[page];
+    if (el) el.classList.add('active');
+  }
+
+  function open_(id) { document.getElementById('m-' + id).classList.add('open'); }
+  function close_(id) { document.getElementById('m-' + id).classList.remove('open'); }
+
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+  });
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = ' ' + msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>
